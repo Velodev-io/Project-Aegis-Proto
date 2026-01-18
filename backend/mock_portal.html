@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>City Utility Portal</title>
+    <style>
+        body { font-family: sans-serif; padding: 50px; }
+        .login-box { border: 1px solid #ccc; padding: 20px; width: 300px; }
+        .dashboard { display: none; border: 1px solid #4CAF50; padding: 20px; width: 400px; }
+        .visible { display: block; }
+    </style>
+</head>
+<body>
+
+    <div id="login-section" class="login-box">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username"><br><br>
+        <input type="password" id="password" placeholder="Password"><br><br>
+        <button onclick="login()">Sign In</button>
+    </div>
+
+    <div id="dashboard-section" class="dashboard">
+        <h2>Account Summary</h2>
+        <p>Welcome, Senior Citizen</p>
+        <div class="bill-info">
+            <h3>Current Bill Due</h3>
+            <p class="amount">$145.50</p>
+            <p>Due Date: Jan 30, 2026</p>
+        </div>
+    </div>
+
+    <script>
+        function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            if(user === 'senior_citizen' && pass === 'password123') {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('dashboard-section').style.display = 'block';
+            } else {
+                alert('Invalid Credentials');
+            }
+        }
+    </script>
+</body>
+</html>

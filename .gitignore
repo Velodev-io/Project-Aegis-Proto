@@ -1,0 +1,26 @@
+# System
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.env
+
+# Database (Generated via main.py)
+data/*.db
+
+# Node/Web
+node_modules/
+npm-debug.log
+dist/
+build/
+
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies

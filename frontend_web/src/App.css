@@ -1,0 +1,198 @@
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #1a1a2e;
+  color: white;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  max-width: 480px;
+  /* Mobile width simulation */
+  background: #16213e;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+nav {
+  display: flex;
+  background: #0f3460;
+  padding: 10px;
+}
+
+nav span {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+nav span.active {
+  opacity: 1;
+  border-bottom: 2px solid #e94560;
+  font-weight: bold;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+/* Shield */
+.shield-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.shield-icon {
+  font-size: 150px;
+  margin-bottom: 20px;
+  transition: transform 0.2s;
+}
+
+.shield-icon.pulse {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.controls button {
+  display: block;
+  width: 200px;
+  padding: 15px;
+  margin: 10px;
+  font-size: 18px;
+  border: none;
+  background: #e94560;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.controls button.secondary {
+  background: #0f3460;
+}
+
+.controls button:disabled {
+  opacity: 0.5;
+}
+
+/* Scam Overlay */
+.scam-overlay {
+  background: #d32f2f;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  text-align: center;
+}
+
+.scam-overlay h1 {
+  font-size: 40px;
+}
+
+.scam-overlay button {
+  margin-top: 30px;
+  padding: 20px;
+  font-size: 20px;
+  color: #d32f2f;
+  background: white;
+  border: none;
+  font-weight: bold;
+}
+
+/* Steward */
+.card {
+  background: #0f3460;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+}
+
+.amount {
+  font-size: 24px;
+  color: #e94560;
+  font-weight: bold;
+}
+
+.actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.actions button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
+
+.approve {
+  background: #4caf50;
+}
+
+.reject {
+  background: #f44336;
+}
+
+.scan-btn {
+  background-color: #4CAF50;
+  /* Green */
+  color: white;
+  padding: 15px;
+  width: 200px;
+  /* Match other buttons width if they have fixed width, checking controls button style above says 200px */
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  /* Match others */
+  font-weight: bold;
+  /* Bold like others? Others don't say bold but let's make it nice */
+  display: flex;
+  /* Flex to center text if needed, or block */
+  align-items: center;
+  justify-content: center;
+  margin: 10px;
+  box-sizing: border-box;
+  /* Important for padding */
+  text-align: center;
+}
+
+.scan-btn:active {
+  transform: scale(0.95);
+}
