@@ -67,3 +67,22 @@ def analyze_document_mock(filename: str):
             "classification": "Safe",
             "reasoning": "Document appears to be a standard letter. No threats detected."
         }
+
+def check_for_scams(text: str):
+    """
+    Analyzes voice text for scam markers using regex keywords.
+    """
+    text_lower = text.lower()
+    scam_keywords = ["irs", "gift card", "urgent payment", "password", "social security", "jail"]
+    
+    for word in scam_keywords:
+        if word in text_lower:
+            return {
+                "status": "DANGER",
+                "message": "HANG UP NOW! This is a scam."
+            }
+            
+    return {
+        "status": "SAFE",
+        "message": "I am listening. Everything looks okay."
+    }

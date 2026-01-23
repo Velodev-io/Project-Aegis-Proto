@@ -23,6 +23,22 @@ class ApiService {
     return {'classification': 'Error', 'reasoning': 'Could not reach Sentinel.'};
   }
 
+  Future<Map<String, dynamic>> analyzeVoice(String text) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/analyze-voice'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'text': text}),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (e) {
+      print("Error analyzing voice: $e");
+    }
+    return {'status': 'SAFE', 'message': 'Offline mode. Stay alert.'};
+  }
+
   Future<Map<String, dynamic>> checkBills() async {
     try {
       final response = await http.post(

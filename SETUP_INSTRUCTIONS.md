@@ -50,10 +50,10 @@ This is the "Project Aegis" mobile interface.
 4.  **Configure Permissions (Important for Voice)**:
     *   **iOS (`ios/Runner/Info.plist`)**: Open this file and add:
         ```xml
-        <key>NSSpeechRecognitionUsageDescription</key>
-        <string>Aegis needs speech recognition to hear your commands.</string>
         <key>NSMicrophoneUsageDescription</key>
-        <string>Aegis needs access to the microphone.</string>
+        <string>Aegis needs the mic to protect you from scams.</string>
+        <key>NSSpeechRecognitionUsageDescription</key>
+        <string>Aegis needs to hear callers to identify fraud.</string>
         ```
     *   **Android (`android/app/src/main/AndroidManifest.xml`)**: Add:
         ```xml

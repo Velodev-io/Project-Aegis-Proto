@@ -6,7 +6,7 @@ import os
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 
-from sentinel import analyze_call_transcript, analyze_document_mock
+from sentinel import analyze_call_transcript, analyze_document_mock, check_for_scams
 from advocate import check_bills
 from database import init_db, DB_PATH
 
@@ -83,6 +83,13 @@ async def sentinel_scan(file: UploadFile = File(...)):
     # In a real app, we would read file.file and pass to OCR/Vision model.
     # For prototype, we mock the analysis based on filename or random logic.
     return analyze_document_mock(file.filename)
+
+@app.post("/analyze-voice")
+def analyze_voice(transcript: Transcript):
+    """
+    Real-time voice analysis for the Sentinel module.
+    """
+    return check_for_scams(transcript.text)
 
 @app.post("/advocate/check_bills")
 async def advocate_check(request: BillRequest):
