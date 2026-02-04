@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import LoginPage from "./components/LoginPage";
 import SeniorDashboard from "./components/SeniorDashboard";
 import AdvocatePage from "./components/AdvocatePage";
 import FamilyPage from "./components/FamilyPage";
@@ -6,12 +8,22 @@ import HelpPage from "./components/HelpPage";
 import CaregiverDashboard from "./components/CaregiverDashboard";
 import Shield from "./components/Shield";
 import Steward from "./components/Steward";
+import SentinelDashboard from "./components/SentinelDashboard";
 import { analyzeCall, checkBills, scanDocument } from "./api";
 import "./App.css";
 
+// Main App Component with Router
 function App() {
-  // 'dashboard' = Senior app home, 'advocate' = Senior app bills page, 'caregiver' = Separate caregiver app
-  const [view, setView] = useState("dashboard");
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}
+
+// App Content with routing logic
+function AppContent() {
+  const navigate = useNavigate();
   const [status, setStatus] = useState("Ready");
   const [alert, setAlert] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
@@ -68,6 +80,7 @@ function App() {
     if (type !== "success" && !msg.includes("Safe")) window.alert(msg);
   };
 
+  // Scam Alert Overlay
   if (alert) {
     return (
       <div className="scam-overlay">
@@ -78,46 +91,69 @@ function App() {
     );
   }
 
-  // Show new dashboard by default
-  if (view === "dashboard") {
-    return <SeniorDashboard onToggleDarkMode={toggleDarkMode} darkMode={darkMode} onNavigateToAdvocate={() => setView("advocate")} onNavigateToFamily={() => setView("family")} onNavigateToHelp={() => setView("help")} />;
-  }
-
-  // Show advocate page
-  if (view === "advocate") {
-    return <AdvocatePage onBack={() => setView("dashboard")} darkMode={darkMode} />;
-  }
-
-  // Show family page
-  if (view === "family") {
-    return <FamilyPage onBack={() => setView("dashboard")} darkMode={darkMode} />;
-  }
-
-  // Show help page
-  if (view === "help") {
-    return <HelpPage onBack={() => setView("dashboard")} darkMode={darkMode} />;
-  }
-
-  // Show caregiver dashboard
-  if (view === "caregiver") {
-    return <CaregiverDashboard darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
-  }
-
   return (
-    <div className="app-container">
-      <nav>
-        <span onClick={() => setView("dashboard")} className={view === "dashboard" ? "active" : ""}>Dashboard</span>
-        <span onClick={() => setView("caregiver")} className={view === "caregiver" ? "active" : ""}>Caregiver</span>
-        <span onClick={() => setView("senior")} className={view === "senior" ? "active" : ""}>Senior Mode</span>
-        <span onClick={() => setView("steward")} className={view === "steward" ? "active" : ""}>Steward Mode</span>
-      </nav>
+    <Routes>
+      {/* Login/Role Selection Page */}
+      <Route
+        path="/"
+        element={<LoginPage darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />}
+      />
 
-      <main>
-        {view === "senior" ? <Shield onScan={handleScan} status={status} /> : <Steward />}
-      </main>
-    </div>
+      {/* Senior Dashboard Routes */}
+      <Route
+        path="/senior-dashboard"
+        element={
+          <SeniorDashboard
+            onToggleDarkMode={toggleDarkMode}
+            darkMode={darkMode}
+            onNavigateToAdvocate={() => navigate("/advocate")}
+            onNavigateToFamily={() => navigate("/family")}
+            onNavigateToHelp={() => navigate("/help")}
+            onNavigateToSentinel={() => navigate("/sentinel")}
+          />
+        }
+      />
+      <Route
+        path="/advocate"
+        element={<AdvocatePage onBack={() => navigate("/senior-dashboard")} darkMode={darkMode} />}
+      />
+      <Route
+        path="/family"
+        element={<FamilyPage onBack={() => navigate("/senior-dashboard")} darkMode={darkMode} />}
+      />
+      <Route
+        path="/help"
+        element={<HelpPage onBack={() => navigate("/senior-dashboard")} darkMode={darkMode} />}
+      />
+
+      {/* Caregiver Dashboard */}
+      <Route
+        path="/caregiver"
+        element={<CaregiverDashboard darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />}
+      />
+
+      {/* Steward/HITL Dashboard */}
+      <Route
+        path="/steward"
+        element={<Steward />}
+      />
+
+      {/* Sentinel Security Dashboard */}
+      <Route
+        path="/sentinel"
+        element={<SentinelDashboard darkMode={darkMode} onBack={() => navigate("/senior-dashboard")} />}
+      />
+
+      {/* Legacy Shield Component */}
+      <Route
+        path="/senior"
+        element={<Shield onScan={handleScan} status={status} />}
+      />
+
+      {/* Catch all - redirect to login */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
 export default App;
-

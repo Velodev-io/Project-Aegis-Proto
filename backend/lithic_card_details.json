@@ -1,0 +1,14 @@
+{
+  "card_id": "card_mock_senior_robert_001_3061",
+  "last_four": "1167",
+  "exp_month": "12",
+  "exp_year": "2028",
+  "status": "ACTIVE",
+  "spending_limits": {
+    "monthly": 2000.0,
+    "daily": 66.66666666666667
+  },
+  "senior_id": "senior_robert_001",
+  "created_at": "2026-02-03T11:15:16.149385",
+  "mock": true
+}

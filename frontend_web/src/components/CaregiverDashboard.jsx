@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ActivityTimelineItem = ({ icon, iconBg, iconColor, title, time, description, isLast }) => {
     return (
@@ -18,6 +19,7 @@ const ActivityTimelineItem = ({ icon, iconBg, iconColor, title, time, descriptio
 };
 
 const CaregiverDashboard = ({ darkMode, onToggleDarkMode }) => {
+    const navigate = useNavigate();
     const activities = [
         {
             icon: 'block',
@@ -50,7 +52,14 @@ const CaregiverDashboard = ({ darkMode, onToggleDarkMode }) => {
             {/* Top Navigation Bar */}
             <div className="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center p-4 justify-between">
-                    <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        aria-label="Back to Login"
+                    >
+                        <span className="material-symbols-outlined text-slate-600 dark:text-slate-300">arrow_back</span>
+                    </button>
+                    <div className="flex items-center gap-3 flex-1 ml-3">
                         <div className="bg-primary/10 p-1 rounded-full border border-primary/20">
                             <div
                                 className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
@@ -191,7 +200,7 @@ const CaregiverDashboard = ({ darkMode, onToggleDarkMode }) => {
             </main>
 
             {/* Bottom Navigation Bar (iOS Style) */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-8 pt-3 px-6">
+            <nav className="fixed bottom-0 left-0 right-0 bg-transparent backdrop-blur-lg border-t border-slate-200/20 dark:border-slate-800/20 pb-8 pt-3 px-6">
                 <div className="max-w-md mx-auto flex justify-between items-center">
                     <div className="flex flex-col items-center gap-1 text-primary">
                         <span className="material-symbols-outlined">dashboard</span>

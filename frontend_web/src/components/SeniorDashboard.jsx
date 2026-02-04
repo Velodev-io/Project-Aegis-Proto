@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SeniorDashboard = ({ onToggleDarkMode, darkMode, onNavigateToAdvocate, onNavigateToFamily, onNavigateToHelp }) => {
+const SeniorDashboard = ({ onToggleDarkMode, darkMode, onNavigateToAdvocate, onNavigateToFamily, onNavigateToHelp, onNavigateToSentinel }) => {
     return (
         <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden max-w-[480px] mx-auto bg-white dark:bg-background-dark shadow-xl">
             {/* TopAppBar */}
@@ -18,7 +18,7 @@ const SeniorDashboard = ({ onToggleDarkMode, darkMode, onNavigateToAdvocate, onN
                 <div className="flex w-12 items-center justify-end">
                     <button
                         onClick={onToggleDarkMode}
-                        className="flex cursor-pointer items-center justify-center rounded-lg h-12 bg-transparent text-[#0d131b] dark:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="flex cursor-pointer items-center justify-center rounded-lg h-10 w-10 bg-transparent text-[#0d131b] dark:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         aria-label="Toggle dark mode"
                     >
                         <span className="material-symbols-outlined">
@@ -64,17 +64,20 @@ const SeniorDashboard = ({ onToggleDarkMode, darkMode, onNavigateToAdvocate, onN
 
             {/* Status Cards */}
             <div className="px-6 py-4 space-y-4">
-                {/* Card 1: Scams Blocked */}
-                <div className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                {/* Card 1: Scams Blocked - Now Clickable */}
+                <div
+                    onClick={onNavigateToSentinel}
+                    className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl p-5 flex items-center justify-between shadow-sm cursor-pointer hover:border-green-500/30 hover:shadow-md transition-all active:scale-[0.98]"
+                >
                     <div className="flex items-center gap-4">
                         <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg">
-                            <span className="material-symbols-outlined text-green-600 dark:text-green-400">block</span>
+                            <span className="material-symbols-outlined text-green-600 dark:text-green-400">shield</span>
                         </div>
                         <div>
                             <p className="text-slate-500 dark:text-slate-400 text-base font-medium">
-                                Scams Blocked Today
+                                Sentinel Security
                             </p>
-                            <p className="text-2xl font-bold text-slate-900 dark:text-white">3 Threats Stopped</p>
+                            <p className="text-2xl font-bold text-slate-900 dark:text-white">Active Protection</p>
                         </div>
                     </div>
                     <span className="material-symbols-outlined text-slate-300">chevron_right</span>
