@@ -128,3 +128,111 @@ export async function scanDocument(file) {
         return { classification: "Error", reasoning: "Backend offline" };
     }
 }
+
+// ============================================================================
+// ADVOCATE MODULE API FUNCTIONS
+// ============================================================================
+
+export async function analyzeBill(lineItems, isInNetwork = true, previousBills = null) {
+    try {
+        const res = await fetch(`${API_BASE}/advocate/analyze-bill`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                line_items: lineItems,
+                is_in_network: isInNetwork,
+                previous_bills: previousBills
+            }),
+        });
+        return await res.json();
+    } catch (e) {
+        return {
+            total_billed: 0,
+            total_allowed: 0,
+            potential_savings: 0,
+            errors: [],
+            recommendations: [],
+            risk_score: 0,
+            action_required: false,
+            error: "Backend offline"
+        };
+    }
+}
+
+export async function auditSubscriptions(transactions, usageData = null) {
+    try {
+        const res = await fetch(`${API_BASE}/advocate/subscriptions/audit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                transactions,
+                usage_data: usageData
+            }),
+        });
+        return await res.json();
+    } catch (e) {
+        return {
+            subscriptions: [],
+            total_monthly_cost: 0,
+            potential_monthly_savings: 0,
+            potential_annual_savings: 0,
+            action_required: false,
+            error: "Backend offline"
+        };
+    }
+}
+
+export async function generateNegotiationScript(scriptType, merchant, details = {}) {
+    try {
+        const res = await fetch(`${API_BASE}/advocate/generate-script`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                script_type: scriptType,
+                merchant,
+                ...details
+            }),
+        });
+        return await res.json();
+    } catch (e) {
+        return {
+            formatted_script: "Backend offline",
+            error: "Backend offline"
+        };
+    }
+}
+
+export async function getAdvocateSummary() {
+    try {
+        const res = await fetch(`${API_BASE}/advocate/summary`);
+        return await res.json();
+    } catch (e) {
+        return {
+            module: "Advocate",
+            status: "offline",
+            capabilities: {},
+            error: "Backend offline"
+        };
+    }
+}
+
+export async function uploadBillImage(file) {
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch(`${API_BASE}/advocate/analyze-bill-image`, {
+            method: "POST",
+            body: formData,
+        });
+        return await res.json();
+    } catch (e) {
+        return {
+            extracted_text: "",
+            line_items: [],
+            analysis: null,
+            error: "Backend offline"
+        };
+    }
+}
+

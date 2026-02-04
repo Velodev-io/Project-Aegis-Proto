@@ -23,6 +23,19 @@ except ImportError:
     SENTINEL_MODULE_AVAILABLE = False
     print("⚠️  Sentinel Module not available - using legacy endpoints only")
 
+# Import Advocate Module components
+try:
+    from advocate_bill_auditor import AgenticAuditor, InsurancePolicy, LineItem
+    from advocate_subscription_detector import SubscriptionDetector, Transaction
+    from advocate_cancellation_agent import CancellationAgent
+    from advocate_negotiation_agent import NegotiationScriptGenerator
+    from datetime import datetime
+    from typing import List, Dict, Optional
+    ADVOCATE_MODULE_AVAILABLE = True
+except ImportError:
+    ADVOCATE_MODULE_AVAILABLE = False
+    print("⚠️  Advocate Module not available - using legacy endpoints only")
+
 # Models
 class Transcript(BaseModel):
     text: str
@@ -134,6 +147,250 @@ def steward_review(action: ApprovalAction):
     """
     update_item_status(action.item_id, action.decision)
     return {"status": "success", "decision": action.decision}
+
+# ============================================================================
+# ADVOCATE MODULE ENDPOINTS
+# ============================================================================
+
+if ADVOCATE_MODULE_AVAILABLE:
+    # Initialize Advocate components
+    insurance_policy = InsurancePolicy("PPO")
+    bill_auditor = AgenticAuditor(insurance_policy)
+    subscription_detector = SubscriptionDetector()
+    cancellation_agent = CancellationAgent(read_only=True)
+    script_generator = NegotiationScriptGenerator()
+    
+    # Pydantic models for Advocate
+    class BillAnalysisRequest(BaseModel):
+        line_items: List[Dict]
+        is_in_network: bool = True
+        previous_bills: Optional[List[List[Dict]]] = None
+    
+    class SubscriptionAuditRequest(BaseModel):
+        transactions: List[Dict]
+        usage_data: Optional[Dict[str, int]] = None
+    
+    class NegotiationScriptRequest(BaseModel):
+        script_type: str
+        merchant: str
+        errors: Optional[List[Dict]] = None
+        total_disputed: Optional[float] = None
+        policy_holder_name: Optional[str] = None
+        subscription_amount: Optional[float] = None
+        months_unused: Optional[int] = None
+        reason: Optional[str] = None
+    
+    @app.post("/advocate/analyze-bill")
+    async def analyze_bill(request: BillAnalysisRequest):
+        """Analyze medical bill for errors"""
+        # Convert dict line items to LineItem objects
+        line_items = []
+        for item in request.line_items:
+            line_items.append(LineItem(
+                code=item["code"],
+                description=item["description"],
+                quantity=item["quantity"],
+                unit_price=item["unit_price"],
+                total=item["total"],
+                date_of_service=datetime.fromisoformat(item["date_of_service"]) if item.get("date_of_service") else None
+            ))
+        
+        # Convert previous bills if provided
+        previous_bills = None
+        if request.previous_bills:
+            previous_bills = []
+            for prev_bill in request.previous_bills:
+                prev_items = []
+                for item in prev_bill:
+                    prev_items.append(LineItem(
+                        code=item["code"],
+                        description=item["description"],
+                        quantity=item["quantity"],
+                        unit_price=item["unit_price"],
+                        total=item["total"],
+                        date_of_service=datetime.fromisoformat(item["date_of_service"]) if item.get("date_of_service") else None
+                    ))
+                previous_bills.append(prev_items)
+        
+        # Analyze bill
+        analysis = bill_auditor.analyze_bill(
+            line_items=line_items,
+            is_in_network=request.is_in_network,
+            previous_bills=previous_bills
+        )
+        
+        # Generate negotiation script if errors found
+        negotiation_script = None
+        if analysis.errors and analysis.potential_savings > 0:
+            script = script_generator.generate_medical_bill_dispute(
+                provider_name="Medical Provider",
+                errors=analysis.errors,
+                total_disputed=analysis.potential_savings,
+                policy_holder_name="Patient"
+            )
+            negotiation_script = script_generator.format_script_for_human(script)
+        
+        return {
+            "total_billed": analysis.total_billed,
+            "total_allowed": analysis.total_allowed,
+            "potential_savings": analysis.potential_savings,
+            "errors": analysis.errors,
+            "recommendations": analysis.recommendations,
+            "risk_score": analysis.risk_score,
+            "negotiation_script": negotiation_script,
+            "action_required": analysis.risk_score > 50,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    
+    @app.post("/advocate/subscriptions/audit")
+    async def audit_subscriptions(request: SubscriptionAuditRequest):
+        """Detect and analyze subscriptions from transaction history"""
+        # Convert dict transactions to Transaction objects
+        transactions = []
+        for txn in request.transactions:
+            transactions.append(Transaction(
+                date=datetime.fromisoformat(txn["date"]),
+                merchant=txn["merchant"],
+                amount=txn["amount"],
+                category=txn["category"],
+                description=txn["description"]
+            ))
+        
+        # Detect subscriptions
+        subscriptions = subscription_detector.detect_subscriptions(
+            transactions=transactions,
+            usage_data=request.usage_data
+        )
+        
+        # Calculate totals
+        total_monthly_cost = sum(
+            sub.average_amount if sub.frequency == "MONTHLY" else sub.average_amount / 12
+            for sub in subscriptions
+        )
+        
+        potential_savings = sum(
+            (sub.average_amount if sub.frequency == "MONTHLY" else sub.average_amount / 12)
+            for sub in subscriptions
+            if sub.recommendation == "CANCEL"
+        )
+        
+        # Convert to dict
+        subscriptions_dict = []
+        for sub in subscriptions:
+            subscriptions_dict.append({
+                "merchant": sub.merchant,
+                "frequency": sub.frequency,
+                "average_amount": sub.average_amount,
+                "last_charge": sub.last_charge.isoformat(),
+                "total_charges": sub.total_charges,
+                "total_spent": sub.total_spent,
+                "confidence": sub.confidence,
+                "usage_score": sub.usage_score,
+                "recommendation": sub.recommendation,
+                "reasoning": sub.reasoning
+            })
+        
+        return {
+            "subscriptions": subscriptions_dict,
+            "total_monthly_cost": total_monthly_cost,
+            "potential_monthly_savings": potential_savings,
+            "potential_annual_savings": potential_savings * 12,
+            "action_required": potential_savings > 0,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    
+    @app.post("/advocate/generate-script")
+    async def generate_negotiation_script(request: NegotiationScriptRequest):
+        """Generate professional negotiation script"""
+        if request.script_type == "MEDICAL_BILL":
+            if not request.errors or request.total_disputed is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Medical bill script requires 'errors' and 'total_disputed'"
+                )
+            
+            script = script_generator.generate_medical_bill_dispute(
+                provider_name=request.merchant,
+                errors=request.errors,
+                total_disputed=request.total_disputed,
+                policy_holder_name=request.policy_holder_name or "Patient"
+            )
+        
+        elif request.script_type == "SUBSCRIPTION":
+            if request.subscription_amount is None or request.months_unused is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Subscription script requires 'subscription_amount' and 'months_unused'"
+                )
+            
+            script = script_generator.generate_subscription_cancellation_dispute(
+                merchant=request.merchant,
+                subscription_amount=request.subscription_amount,
+                months_unused=request.months_unused,
+                reason=request.reason or "zero usage detected"
+            )
+        
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown script type: {request.script_type}"
+            )
+        
+        return {
+            "merchant": script.merchant,
+            "script_type": script.script_type,
+            "tone": script.tone,
+            "estimated_duration": script.estimated_duration,
+            "formatted_script": script_generator.format_script_for_human(script),
+            "voice_script": script_generator.format_script_for_voice(script),
+            "expected_outcome": script.expected_outcome,
+            "fallback_options": script.fallback_options
+        }
+    
+    @app.get("/advocate/summary")
+    async def get_advocate_summary():
+        """Get summary of Advocate module capabilities"""
+        return {
+            "module": "Advocate",
+            "status": "operational",
+            "capabilities": {
+                "medical_bill_forensics": {
+                    "available": True,
+                    "features": [
+                        "Upcoding detection",
+                        "Duplicate billing detection",
+                        "Unbundling detection",
+                        "Insurance policy verification",
+                        "Negotiation script generation"
+                    ]
+                },
+                "subscription_management": {
+                    "available": True,
+                    "features": [
+                        "Subscription detection from transactions",
+                        "Usage analysis",
+                        "Cancellation recommendations",
+                        "Autonomous cancellation (shadow mode)",
+                        "Dark pattern detection"
+                    ]
+                },
+                "negotiation": {
+                    "available": True,
+                    "features": [
+                        "Professional script generation",
+                        "Medical bill disputes",
+                        "Subscription cancellations",
+                        "Price negotiations"
+                    ]
+                }
+            },
+            "safety_features": {
+                "shadow_mode": True,
+                "human_approval_required": True,
+                "audit_trail": True
+            }
+        }
+
 
 # ============================================================================
 # SENTINEL MODULE ENDPOINTS

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAdvocateSummary, analyzeBill, uploadBillImage } from '../api';
 
-const BattleCard = ({ status, statusColor, title, description, actionText, actionIcon, icon, iconBg, iconColor, isPrimary = false }) => {
+const BattleCard = ({ status, statusColor, title, description, actionText, actionIcon, icon, iconBg, iconColor, isPrimary = false, onClick }) => {
     const statusColors = {
         'In Progress': { dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
         'Resolved': { dot: 'bg-green-500', text: 'text-green-600 dark:text-green-400' },
@@ -23,7 +24,10 @@ const BattleCard = ({ status, statusColor, title, description, actionText, actio
                             {description}
                         </p>
                     </div>
-                    <button className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-4 flex-row-reverse ${isPrimary ? 'bg-primary text-white' : 'bg-primary/10 text-primary'} gap-1 text-sm font-bold leading-normal w-fit`}>
+                    <button
+                        onClick={onClick}
+                        className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-4 flex-row-reverse ${isPrimary ? 'bg-primary text-white' : 'bg-primary/10 text-primary'} gap-1 text-sm font-bold leading-normal w-fit`}
+                    >
                         <span className="material-symbols-outlined text-[18px]">{actionIcon}</span>
                         <span className="truncate">{actionText}</span>
                     </button>
@@ -37,45 +41,108 @@ const BattleCard = ({ status, statusColor, title, description, actionText, actio
 };
 
 const AdvocatePage = ({ onBack, darkMode }) => {
-    const battles = [
-        {
-            status: 'In Progress',
-            title: 'Comcast Bill',
-            description: (
-                <>
-                    Disputed. Found <span className="font-bold text-[#0d131b] dark:text-white">$20 overcharge</span>. Refund pending.
-                </>
-            ),
-            actionText: 'View Details',
-            actionIcon: 'chevron_right',
-            icon: 'wifi',
-            iconBg: 'bg-primary/5',
-            iconColor: 'border-gray-100 dark:border-gray-700 text-primary',
-            isPrimary: false
-        },
-        {
-            status: 'Resolved',
-            title: 'Medicare Claim',
-            description: 'Approved. Full benefits applied to your provider account.',
-            actionText: 'View Results',
-            actionIcon: 'chevron_right',
-            icon: 'medical_services',
-            iconBg: 'bg-green-50 dark:bg-green-900/10',
-            iconColor: 'border-green-100 dark:border-green-900/30 text-green-600',
-            isPrimary: false
-        },
-        {
-            status: 'Review Required',
-            title: 'Property Tax Review',
-            description: 'AI analysis complete. Potential savings found in regional assessment.',
-            actionText: 'Approve Action',
-            actionIcon: 'gavel',
-            icon: 'home_work',
-            iconBg: 'bg-blue-50 dark:bg-blue-900/10',
-            iconColor: 'border-blue-100 dark:border-blue-900/30 text-blue-600',
-            isPrimary: true
+    const [loading, setLoading] = useState(true);
+    const [summary, setSummary] = useState(null);
+    const [totalSaved, setTotalSaved] = useState(1240.00);
+    const [battles, setBattles] = useState([]);
+    const [uploading, setUploading] = useState(false);
+
+    useEffect(() => {
+        loadAdvocateData();
+    }, []);
+
+    const loadAdvocateData = async () => {
+        setLoading(true);
+        try {
+            const summaryData = await getAdvocateSummary();
+            setSummary(summaryData);
+
+            // Load mock battles for now (in production, these would come from backend)
+            setBattles([
+                {
+                    status: 'In Progress',
+                    title: 'Comcast Bill',
+                    description: (
+                        <>
+                            Disputed. Found <span className="font-bold text-[#0d131b] dark:text-white">$20 overcharge</span>. Refund pending.
+                        </>
+                    ),
+                    actionText: 'View Details',
+                    actionIcon: 'chevron_right',
+                    icon: 'wifi',
+                    iconBg: 'bg-primary/5',
+                    iconColor: 'border-gray-100 dark:border-gray-700 text-primary',
+                    isPrimary: false
+                },
+                {
+                    status: 'Resolved',
+                    title: 'Medicare Claim',
+                    description: 'Approved. Full benefits applied to your provider account.',
+                    actionText: 'View Results',
+                    actionIcon: 'chevron_right',
+                    icon: 'medical_services',
+                    iconBg: 'bg-green-50 dark:bg-green-900/10',
+                    iconColor: 'border-green-100 dark:border-green-900/30 text-green-600',
+                    isPrimary: false
+                },
+                {
+                    status: 'Review Required',
+                    title: 'Property Tax Review',
+                    description: 'AI analysis complete. Potential savings found in regional assessment.',
+                    actionText: 'Approve Action',
+                    actionIcon: 'gavel',
+                    icon: 'home_work',
+                    iconBg: 'bg-blue-50 dark:bg-blue-900/10',
+                    iconColor: 'border-blue-100 dark:border-blue-900/30 text-blue-600',
+                    isPrimary: true
+                }
+            ]);
+        } catch (error) {
+            console.error('Error loading advocate data:', error);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
+    const handleUploadBill = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*,.pdf';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                setUploading(true);
+                try {
+                    const result = await uploadBillImage(file);
+                    if (result.analysis) {
+                        alert(`Bill analyzed! Potential savings: $${result.analysis.potential_savings || 0}`);
+                        loadAdvocateData(); // Reload data
+                    } else if (result.error) {
+                        alert('Backend is offline. Please try again later.');
+                    }
+                } catch (error) {
+                    console.error('Error uploading bill:', error);
+                    alert('Error uploading bill. Please try again.');
+                } finally {
+                    setUploading(false);
+                }
+            }
+        };
+        input.click();
+    };
+
+    const handleBattleClick = (battle) => {
+        alert(`Viewing details for: ${battle.title}`);
+    };
+
+    if (loading) {
+        return (
+            <div className="relative flex h-screen w-full max-w-[430px] mx-auto flex-col bg-background-light dark:bg-background-dark items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">Loading Advocate...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="relative flex h-auto min-h-screen w-full max-w-[430px] mx-auto flex-col bg-background-light dark:bg-background-dark shadow-xl overflow-x-hidden">
@@ -101,6 +168,12 @@ const AdvocatePage = ({ onBack, darkMode }) => {
             <div className="px-4 py-4">
                 <p className="text-sm font-medium text-primary uppercase tracking-wider mb-1">Aegis Fiduciary</p>
                 <h1 className="text-2xl font-bold text-[#0d131b] dark:text-white">Bill Protection</h1>
+                {summary && summary.status === 'operational' && (
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">● System Online</p>
+                )}
+                {summary && summary.status === 'offline' && (
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">● Backend Offline</p>
+                )}
             </div>
 
             {/* Stats Section */}
@@ -113,7 +186,7 @@ const AdvocatePage = ({ onBack, darkMode }) => {
                         <span className="material-symbols-outlined text-green-600">trending_up</span>
                     </div>
                     <p className="text-[#0d131b] dark:text-white tracking-tight text-4xl font-bold leading-tight">
-                        $1,240.00
+                        ${totalSaved.toFixed(2)}
                     </p>
                     <div className="flex items-center gap-1">
                         <span className="text-[#07883b] text-sm font-bold leading-normal">+15%</span>
@@ -132,7 +205,11 @@ const AdvocatePage = ({ onBack, darkMode }) => {
 
             {/* Battle Cards */}
             {battles.map((battle, index) => (
-                <BattleCard key={index} {...battle} />
+                <BattleCard
+                    key={index}
+                    {...battle}
+                    onClick={() => handleBattleClick(battle)}
+                />
             ))}
 
             {/* Floating Action Button Space */}
@@ -140,9 +217,22 @@ const AdvocatePage = ({ onBack, darkMode }) => {
 
             {/* Bottom Action Button */}
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[390px] px-4">
-                <button className="w-full flex items-center justify-center gap-2 bg-primary text-white rounded-xl h-14 font-bold text-lg shadow-lg shadow-primary/30 hover:bg-primary/90 active:scale-95 transition-all">
-                    <span className="material-symbols-outlined">add_circle</span>
-                    <span>Upload New Bill or Claim</span>
+                <button
+                    onClick={handleUploadBill}
+                    disabled={uploading}
+                    className="w-full flex items-center justify-center gap-2 bg-primary text-white rounded-xl h-14 font-bold text-lg shadow-lg shadow-primary/30 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {uploading ? (
+                        <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            <span>Uploading...</span>
+                        </>
+                    ) : (
+                        <>
+                            <span className="material-symbols-outlined">add_circle</span>
+                            <span>Upload New Bill or Claim</span>
+                        </>
+                    )}
                 </button>
             </div>
 
