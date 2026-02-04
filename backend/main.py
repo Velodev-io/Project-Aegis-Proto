@@ -36,6 +36,14 @@ except ImportError:
     ADVOCATE_MODULE_AVAILABLE = False
     print("⚠️  Advocate Module not available - using legacy endpoints only")
 
+# Import Proxy Module (Module C) components
+try:
+    from proxy_api import router as proxy_router
+    PROXY_MODULE_AVAILABLE = True
+except ImportError:
+    PROXY_MODULE_AVAILABLE = False
+    print("⚠️  Proxy Module (Module C) not available")
+
 # Models
 class Transcript(BaseModel):
     text: str
@@ -87,6 +95,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register Module C Router
+if PROXY_MODULE_AVAILABLE:
+    app.include_router(proxy_router)
+    print("✅ Module C (The Proxy) endpoints registered")
 
 @app.get("/")
 def read_root():

@@ -9,6 +9,11 @@ import CaregiverDashboard from "./components/CaregiverDashboard";
 import Shield from "./components/Shield";
 import Steward from "./components/Steward";
 import SentinelDashboard from "./components/SentinelDashboard";
+import TrustVaultPermissions from "./components/TrustVaultPermissions";
+import AdvocateSavingsDashboard from "./components/AdvocateSavingsDashboard";
+import UrgentApprovalModal from "./components/UrgentApprovalModal"; // Import for global usage if needed
+import UIShowcase from "./components/UIShowcase";
+import MainApp from "./components/MainApp";
 import { analyzeCall, checkBills, scanDocument } from "./api";
 import "./App.css";
 
@@ -91,68 +96,118 @@ function AppContent() {
     );
   }
 
+  // Demo state for Urgent Approval Modal - typically would be triggered by WebSocket or API polling
+  const [showUrgentModal, setShowUrgentModal] = useState(false);
+
+  // Expose a way to toggle it for demo purposes (e.g. window object or just a hotkey if we wanted)
+  useEffect(() => {
+    window.triggerUrgentModal = () => setShowUrgentModal(true);
+  }, []);
+
   return (
-    <Routes>
-      {/* Login/Role Selection Page */}
-      <Route
-        path="/"
-        element={<LoginPage darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />}
+    <>
+      <UrgentApprovalModal
+        isOpen={showUrgentModal}
+        onClose={() => setShowUrgentModal(false)}
+        details={{
+          amount: "$1,200.00",
+          recipient: "External Account • Chase ****4321",
+          timestamp: "Today, 3:45 PM"
+        }}
+        onApprove={() => {
+          alertUser("Transaction Approved Verified by Face ID", "success");
+          setShowUrgentModal(false);
+        }}
+        onDecline={() => {
+          alertUser("Transaction Declined and Blocked");
+          setShowUrgentModal(false);
+        }}
       />
+      <Routes>
 
-      {/* Senior Dashboard Routes */}
-      <Route
-        path="/senior-dashboard"
-        element={
-          <SeniorDashboard
-            onToggleDarkMode={toggleDarkMode}
-            darkMode={darkMode}
-            onNavigateToAdvocate={() => navigate("/advocate")}
-            onNavigateToFamily={() => navigate("/family")}
-            onNavigateToHelp={() => navigate("/help")}
-            onNavigateToSentinel={() => navigate("/sentinel")}
-          />
-        }
-      />
-      <Route
-        path="/advocate"
-        element={<AdvocatePage onBack={() => navigate("/senior-dashboard")} darkMode={darkMode} />}
-      />
-      <Route
-        path="/family"
-        element={<FamilyPage onBack={() => navigate("/senior-dashboard")} darkMode={darkMode} />}
-      />
-      <Route
-        path="/help"
-        element={<HelpPage onBack={() => navigate("/senior-dashboard")} darkMode={darkMode} />}
-      />
+        {/* Main App with Bottom Navigation */}
+        <Route
+          path="/"
+          element={<MainApp />}
+        />
 
-      {/* Caregiver Dashboard */}
-      <Route
-        path="/caregiver"
-        element={<CaregiverDashboard darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />}
-      />
+        {/* UI Showcase / Navigation Page */}
+        <Route
+          path="/showcase"
+          element={<UIShowcase />}
+        />
 
-      {/* Steward/HITL Dashboard */}
-      <Route
-        path="/steward"
-        element={<Steward />}
-      />
+        {/* Login/Role Selection Page */}
+        <Route
+          path="/login"
+          element={<LoginPage darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />}
+        />
 
-      {/* Sentinel Security Dashboard */}
-      <Route
-        path="/sentinel"
-        element={<SentinelDashboard darkMode={darkMode} onBack={() => navigate("/senior-dashboard")} />}
-      />
+        {/* Senior Dashboard Routes */}
+        <Route
+          path="/senior-dashboard"
+          element={
+            <SeniorDashboard
+              onToggleDarkMode={toggleDarkMode}
+              darkMode={darkMode}
+              onNavigateToAdvocate={() => navigate("/advocate")}
+              onNavigateToFamily={() => navigate("/family")}
+              onNavigateToHelp={() => navigate("/help")}
+              onNavigateToSentinel={() => navigate("/sentinel")}
+            />
+          }
+        />
+        <Route
+          path="/advocate"
+          element={<AdvocatePage onBack={() => navigate("/senior-dashboard")} darkMode={darkMode} />}
+        />
+        <Route
+          path="/family"
+          element={<FamilyPage onBack={() => navigate("/senior-dashboard")} darkMode={darkMode} />}
+        />
+        <Route
+          path="/help"
+          element={<HelpPage onBack={() => navigate("/senior-dashboard")} darkMode={darkMode} />}
+        />
 
-      {/* Legacy Shield Component */}
-      <Route
-        path="/senior"
-        element={<Shield onScan={handleScan} status={status} />}
-      />
+        {/* Caregiver Dashboard */}
+        <Route
+          path="/caregiver"
+          element={<CaregiverDashboard darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />}
+        />
 
-      {/* Catch all - redirect to login */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Steward/HITL Dashboard */}
+        <Route
+          path="/steward"
+          element={<Steward />}
+        />
+
+        {/* Sentinel Security Dashboard */}
+        <Route
+          path="/sentinel"
+          element={<SentinelDashboard darkMode={darkMode} onBack={() => navigate("/senior-dashboard")} />}
+        />
+
+        {/* New UI Modules */}
+        <Route
+          path="/trust-vault"
+          element={<TrustVaultPermissions />}
+        />
+        <Route
+          path="/advocate-savings"
+          element={<AdvocateSavingsDashboard />}
+        />
+
+        {/* Legacy Shield Component */}
+        <Route
+          path="/senior"
+          element={<Shield onScan={handleScan} status={status} />}
+        />
+
+        {/* Catch all - redirect to login */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
 

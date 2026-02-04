@@ -6,3 +6,10 @@ pydantic
 sqlalchemy
 python-multipart
 requests
+alembic
+cryptography
+PyJWT
+pyotp
+reportlab
+qrcode[pil]
+pillow

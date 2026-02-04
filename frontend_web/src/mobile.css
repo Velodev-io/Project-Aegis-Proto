@@ -1,0 +1,19 @@
+/* Mobile-specific fixes for very small screens */
+@media (max-width: 375px) {
+  /* Reduce font sizes on iPhone SE */
+  html {
+    font-size: 14px;
+  }
+  
+  /* Ensure bottom nav doesn't overflow */
+  nav button {
+    min-width: 50px !important;
+  }
+}
+
+/* Safe area for notched devices */
+@supports (padding: env(safe-area-inset-bottom)) {
+  nav {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  }
+}

@@ -8,6 +8,12 @@ from datetime import datetime
 
 Base = declarative_base()
 
+# Import Module C models to register with Base
+try:
+    from proxy_models import SmartPOA, EncryptedToken, AuditLog, BreakGlassEvent, CredentialPresentation
+except ImportError:
+    pass  # Module C not yet available
+
 
 class SecurityLog(Base):
     """
